@@ -1,0 +1,1 @@
+export const siteConfig={name:'Irfan Uruçi',title:'Computer Engineer',origin:'https://irfanuruchi.in',github:'https://github.com/IrfanUruchi',huggingFace:'https://huggingface.co/Irfanuruchi',dockerHub:'https://hub.docker.com/u/irfanuruchi'} as const;

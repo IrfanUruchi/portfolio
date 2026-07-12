@@ -1,0 +1,2 @@
+import{Link}from'react-router-dom';import Seo from'../components/Seo';
+export default function NotFound(){return <><Seo title="Page not found" description="The requested page could not be found."/><section className="not-found shell"><p className="eyebrow">Error 404</p><h1>This route isn’t part of the system.</h1><p>The page may have moved or the address may be incorrect.</p><Link className="button primary" to="/">Return home</Link></section></>}

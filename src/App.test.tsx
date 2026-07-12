@@ -1,0 +1,2 @@
+import{render,screen}from'@testing-library/react';import{MemoryRouter}from'react-router-dom';import App from'./App';
+describe('routing',()=>{it('renders a project detail route',()=>{render(<MemoryRouter initialEntries={['/projects/buildeng']}><App/></MemoryRouter>);expect(screen.getByRole('heading',{level:1,name:'BuildEng'})).toBeInTheDocument()});it('renders the custom 404',()=>{render(<MemoryRouter initialEntries={['/does-not-exist']}><App/></MemoryRouter>);expect(screen.getByText('Error 404')).toBeInTheDocument()})});
