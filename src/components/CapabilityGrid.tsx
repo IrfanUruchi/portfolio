@@ -1,9 +1,9 @@
 const capabilities=[
-['AI and Model Engineering','Fine-tuning, quantization, inference, and model deployment.',['Qwen2.5','QLoRA','GGUF','MLX','OpenVINO','CUDA']],
-['Distributed Systems','Scheduling, RPC, coordination, recovery, and multi-node execution.',['gRPC','Protocol Buffers','MQTT','SQLite']],
-['Edge and Fog Computing','Workload control, telemetry, reconciliation, and local inference.',['Raspberry Pi','MQTT','Docker','CNN','LLMs']],
-['Backend and Infrastructure','APIs, queues, storage, networking, and service coordination.',['Python','FastAPI','PostgreSQL','MongoDB','WebRTC']],
-['Deployment and Platforms','Containerized deployment across cloud, desktop, and edge environments.',['Docker','Docker Compose','Cloudflare Pages','Linux']],
-['Hardware-Aware Engineering','Testing and deployment across ARM64, x86_64, and edge devices.',['ARM64','x86_64','Raspberry Pi','Apple silicon']]
+['AI and Model Engineering','Fine-tuning, evaluation, quantization, and multi-runtime publication with explicit model lineage.',['Qwen3','Qwen2.5','QLoRA','PEFT','GGUF']],
+['Distributed Systems','Persistent scheduling, typed RPC, worker health, retries, and capability-aware execution.',['gRPC','Protocol Buffers','FastAPI','SQLite']],
+['Edge and Fog Computing','Desired-state control, telemetry, recovery, and container workloads across edge nodes.',['MQTT','Docker','Raspberry Pi','Local LLMs']],
+['AI Infrastructure','Hardware discovery, runtime selection, model lifecycle, CPU fallback, and multi-GPU planning.',['Python','Docker','llama.cpp','CUDA']],
+['Operating Systems','Distribution build pipelines, package profiles, system policy, and virtualized installation checks.',['Linux','Bash','Ubuntu','KDE','QEMU']],
+['Hardware-Aware Engineering','Deployment and validation across x86_64, ARM64, CPU, GPU, desktop, and edge environments.',['x86_64','ARM64','NVIDIA','Apple silicon']]
 ] as const;
 export default function CapabilityGrid(){return <div className="cap-grid">{capabilities.map(([title,text,tech],i)=><article key={title}><span>{String(i+1).padStart(2,'0')}</span><h3>{title}</h3><p>{text}</p><ul className="tech-row">{tech.map(item=><li key={item}>{item}</li>)}</ul></article>)}</div>}

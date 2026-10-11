@@ -27,7 +27,7 @@ npm run preview
 
 ## Content editing
 
-Edit project records in `src/data/projects.ts`. Site identity and contact links live in `src/config.ts`; replace the clearly marked placeholder email there before launch. Metadata uses `https://irfanuruchi.in` as the canonical origin.
+Edit project records in `src/data/projects.ts`. Site identity and contact links live in `src/config.ts`. Audited public statistics and their counting policies live in `src/data/portfolio.ts`; refresh the API counts, verification date, and methodology together. Metadata uses `https://irfanuruchi.in` as the canonical origin.
 
 ## Cloudflare Pages
 
