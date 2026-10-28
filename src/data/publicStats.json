@@ -1,0 +1,6 @@
+{
+  "updatedAt": "2026-10-28T14:00:00Z",
+  "github": { "publicRepositories": 59, "lastSuccessAt": "2026-10-28T14:00:00Z" },
+  "huggingFace": { "publicModels": 87, "publicDatasets": 10, "lastSuccessAt": "2026-10-28T14:00:00Z" },
+  "dockerHub": { "publicRepositories": 20, "lastSuccessAt": "2026-10-11T00:00:00Z" }
+}

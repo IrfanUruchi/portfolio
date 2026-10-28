@@ -1,0 +1,27 @@
+name: Refresh public portfolio statistics
+
+on:
+  workflow_dispatch:
+  # Enable this schedule only after approving automatic production updates.
+  # schedule:
+  #   - cron: '17 3 * * *'
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: node scripts/refresh-public-stats.mjs
+      - name: Commit changed snapshot
+        run: |
+          git config user.name 'portfolio-stats-bot'
+          git config user.email 'actions@users.noreply.github.com'
+          git add src/data/publicStats.json
+          git diff --cached --quiet || git commit -m 'chore: refresh public portfolio statistics'
+          git push
