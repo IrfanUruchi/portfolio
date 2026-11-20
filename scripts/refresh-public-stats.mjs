@@ -23,16 +23,37 @@ async function getAll(url, key = '') {
   }
 }
 
+async function getHuggingFaceAll(url) {
+  const items = [];
+  let nextUrl = new URL(url);
+  nextUrl.searchParams.set('limit', '100');
+  while (nextUrl) {
+    const response = await fetch(nextUrl, { headers });
+    if (!response.ok) throw new Error(`${response.status} ${nextUrl}`);
+    const pageItems = await response.json();
+    if (!Array.isArray(pageItems)) throw new Error(`Unexpected Hugging Face response from ${nextUrl}`);
+    items.push(...pageItems);
+    const link = response.headers.get('link') || '';
+    const nextMatch = link.match(/<([^>]+)>;\s*rel="next"/);
+    nextUrl = nextMatch ? new URL(nextMatch[1], nextUrl) : null;
+  }
+  return items;
+}
+
 async function refresh() {
   const previous = JSON.parse(await readFile('src/data/publicStats.json', 'utf8'));
+  const appStore = JSON.parse(await readFile('src/data/appStoreMetadata.json', 'utf8'));
   const refreshedAt = now();
   const next = structuredClone(previous);
-  next.updatedAt = refreshedAt;
-  try { const profile = await getJson(`https://api.github.com/users/${username}`); if (!Number.isInteger(profile.public_repos)) throw new Error('GitHub public_repos was not an integer'); next.github = { publicRepositories: profile.public_repos, lastSuccessAt: refreshedAt }; } catch (error) { console.error(`GitHub refresh failed; retaining ${next.github.lastSuccessAt}: ${error.message}`); }
-  try { const [models, datasets] = await Promise.all([getAll(`https://huggingface.co/api/models?author=${hfUser}`), getAll(`https://huggingface.co/api/datasets?author=${hfUser}`)]); next.huggingFace = { publicModels: models.length, publicDatasets: datasets.length, lastSuccessAt: refreshedAt }; } catch (error) { console.error(`Hugging Face refresh failed; retaining ${next.huggingFace.lastSuccessAt}: ${error.message}`); }
-  try { const repositories = await getAll(`https://hub.docker.com/v2/repositories/${dockerUser}/?page_size=100`, 'results'); next.dockerHub = { publicRepositories: repositories.length, lastSuccessAt: refreshedAt }; } catch (error) { console.error(`Docker Hub refresh failed; retaining ${next.dockerHub.lastSuccessAt}: ${error.message}`); }
+  let statsUpdated=false;
+  try { const profile = await getJson(`https://api.github.com/users/${username}`); if (!Number.isInteger(profile.public_repos)) throw new Error('GitHub public_repos was not an integer'); next.github = { publicRepositories: profile.public_repos, lastSuccessAt: refreshedAt }; statsUpdated=true; } catch (error) { console.error(`GitHub refresh failed; retaining ${next.github.lastSuccessAt}: ${error.message}`); }
+  try { const [models, datasets] = await Promise.all([getHuggingFaceAll(`https://huggingface.co/api/models?author=${hfUser}`), getHuggingFaceAll(`https://huggingface.co/api/datasets?author=${hfUser}`)]); next.huggingFace = { publicModels: models.length, publicDatasets: datasets.length, lastSuccessAt: refreshedAt }; statsUpdated=true; } catch (error) { console.error(`Hugging Face refresh failed; retaining ${next.huggingFace.lastSuccessAt}: ${error.message}`); }
+  try { const repositories = await getAll(`https://hub.docker.com/v2/repositories/${dockerUser}/?page_size=100`, 'results'); next.dockerHub = { publicRepositories: repositories.length, lastSuccessAt: refreshedAt }; statsUpdated=true; } catch (error) { console.error(`Docker Hub refresh failed; retaining ${next.dockerHub.lastSuccessAt}: ${error.message}`); }
+  if(statsUpdated)next.updatedAt=refreshedAt;
+  for(const [slug,entry] of Object.entries(appStore)){try{const result=await getJson(`https://itunes.apple.com/lookup?id=${entry.appStoreId}&country=${entry.country}`);const version=result.results?.[0]?.version;if(typeof version!=='string'||!version)throw new Error('App Store version was not available');appStore[slug]={...entry,version,lastSuccessAt:refreshedAt};}catch(error){console.error(`App Store metadata refresh failed for ${slug}; retaining ${entry.lastSuccessAt}: ${error.message}`)}}
   await writeFile('src/data/publicStats.json', `${JSON.stringify(next, null, 2)}\n`);
-  console.log(JSON.stringify(next));
+  await writeFile('src/data/appStoreMetadata.json', `${JSON.stringify(appStore, null, 2)}\n`);
+  console.log(JSON.stringify({statistics:next,appStore}));
 }
 
 refresh().catch(error => { console.error(error); process.exitCode = 1; });

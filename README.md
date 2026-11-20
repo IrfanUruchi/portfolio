@@ -27,7 +27,7 @@ npm run preview
 
 ## Content editing
 
-Edit project records in `src/data/projects.ts`. Site identity and contact links live in `src/config.ts`. Audited public statistics and their counting policies live in `src/data/portfolio.ts`; refresh the API counts, verification date, and methodology together. Metadata uses `https://irfanuruchi.in` as the canonical origin.
+Edit project records in `src/data/projects.ts`. Site identity and contact links live in `src/config.ts`. Public-statistics presentation and counting policies live in `src/data/portfolio.ts`; the cached API response is `src/data/publicStats.json`. Smart Study Planner’s App Store identifier and last verified public version are stored in `src/data/appStoreMetadata.json`. Metadata uses `https://irfanuruchi.in` as the canonical origin.
 
 ## Cloudflare Pages
 
@@ -37,3 +37,7 @@ Edit project records in `src/data/projects.ts`. Site identity and contact links 
 - Production branch: **`main`**
 
 `public/_redirects` provides the SPA fallback for direct route navigation. Attach `irfanuruchi.in` as the custom domain in the Cloudflare Pages dashboard after the first deployment, then verify DNS and HTTPS activation.
+
+### Metadata refresh
+
+`.github/workflows/refresh-public-stats.yml` runs daily at 03:17 UTC and can also be dispatched manually. It fetches the GitHub profile repository total, paginated Hugging Face model and dataset listings, paginated Docker Hub repositories, and the public App Store version. It commits only cached JSON snapshots; Cloudflare Pages serves those snapshots from the regular production deployment. No token is required for the current public endpoints. The workflow needs GitHub Actions to be enabled and the repository’s `GITHUB_TOKEN` to retain `contents: write` permission. A failed provider retains its prior successful value rather than writing zero.
