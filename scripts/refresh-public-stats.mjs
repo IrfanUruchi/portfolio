@@ -1,59 +1,13 @@
 import { readFile, writeFile } from 'node:fs/promises';
 
-const username = 'IrfanUruchi';
-const hfUser = 'Irfanuruchi';
-const dockerUser = 'irfanuruchi';
-const headers = { 'User-Agent': 'irfan-uruchi-portfolio-stats/1.0', Accept: 'application/json' };
-const now = () => new Date().toISOString();
+const accounts={github:'IrfanUruchi',huggingFace:'Irfanuruchi',dockerHub:'irfanuruchi'};
+const headers={'User-Agent':'irfan-uruci-portfolio-stats/3.0',Accept:'application/json'};
 
-async function getJson(url) {
-  const response = await fetch(url, { headers });
-  if (!response.ok) throw new Error(`${response.status} ${url}`);
-  return response.json();
-}
+async function getJson(fetcher,url){const response=await fetcher(url,{headers});if(!response.ok)throw new Error(`${response.status} ${url}`);try{return{data:await response.json(),response}}catch{throw new Error(`Invalid JSON ${url}`)}}
+export async function getHuggingFaceAll(fetcher,url){const items=[];let next=new URL(url);next.searchParams.set('limit','100');let pages=0;while(next){if(++pages>20)throw new Error('Hugging Face pagination limit exceeded');const{data,response}=await getJson(fetcher,next);if(!Array.isArray(data))throw new Error(`Unexpected Hugging Face response from ${next}`);items.push(...data);const match=(response.headers.get('link')||'').match(/<([^>]+)>;\s*rel="next"/);next=match?new URL(match[1],next):null}return items}
+export async function getDockerHubAll(fetcher,namespace){const items=[];let next=new URL(`https://hub.docker.com/v2/repositories/${namespace}/?page_size=100`);let pages=0;while(next){if(++pages>20)throw new Error('Docker Hub pagination limit exceeded');const{data}=await getJson(fetcher,next);if(!Array.isArray(data.results))throw new Error(`Unexpected Docker Hub response from ${next}`);items.push(...data.results);next=data.next?new URL(data.next):null}return items}
+export async function getPublicCounts(fetcher=fetch){const[github,models,datasets,dockerHub]=await Promise.all([getJson(fetcher,`https://api.github.com/users/${accounts.github}`),getHuggingFaceAll(fetcher,`https://huggingface.co/api/models?author=${accounts.huggingFace}`),getHuggingFaceAll(fetcher,`https://huggingface.co/api/datasets?author=${accounts.huggingFace}`),getDockerHubAll(fetcher,accounts.dockerHub)]);if(!Number.isInteger(github.data.public_repos))throw new Error('GitHub public_repos was not an integer');return{github:github.data.public_repos,huggingFaceModels:models.length,huggingFaceDatasets:datasets.length,dockerHub:dockerHub.length}}
+export function updateSnapshot(previous,counts,updatedAt){const changed=previous.github.publicRepositories!==counts.github||previous.huggingFace.publicModels!==counts.huggingFaceModels||previous.huggingFace.publicDatasets!==counts.huggingFaceDatasets||previous.dockerHub.publicRepositories!==counts.dockerHub;if(!changed)return{changed:false,snapshot:previous};return{changed:true,snapshot:{updatedAt,github:{publicRepositories:counts.github,lastSuccessAt:updatedAt},huggingFace:{publicModels:counts.huggingFaceModels,publicDatasets:counts.huggingFaceDatasets,lastSuccessAt:updatedAt},dockerHub:{publicRepositories:counts.dockerHub,lastSuccessAt:updatedAt}}}}
+export async function refresh({fetcher=fetch,read=readFile,write=writeFile,updatedAt=new Date().toISOString()}={}){const path='src/data/publicStats.json';const previous=JSON.parse(await read(path,'utf8'));let counts;try{counts=await getPublicCounts(fetcher)}catch(error){console.error(`Public statistics refresh failed; retaining verified snapshot: ${error instanceof Error?error.message:'unknown error'}`);return{changed:false,failed:true,snapshot:previous}}const result=updateSnapshot(previous,counts,updatedAt);if(result.changed)await write(path,`${JSON.stringify(result.snapshot,null,2)}\n`);console.log(JSON.stringify({changed:result.changed,counts}));return result}
 
-async function getAll(url, key = '') {
-  const items = [];
-  for (let page = 1; ; page += 1) {
-    const separator = url.includes('?') ? '&' : '?';
-    const data = await getJson(`${url}${separator}page=${page}&limit=100`);
-    const pageItems = Array.isArray(data) ? data : data[key] || [];
-    items.push(...pageItems);
-    if (pageItems.length < 100) return items;
-  }
-}
-
-async function getHuggingFaceAll(url) {
-  const items = [];
-  let nextUrl = new URL(url);
-  nextUrl.searchParams.set('limit', '100');
-  while (nextUrl) {
-    const response = await fetch(nextUrl, { headers });
-    if (!response.ok) throw new Error(`${response.status} ${nextUrl}`);
-    const pageItems = await response.json();
-    if (!Array.isArray(pageItems)) throw new Error(`Unexpected Hugging Face response from ${nextUrl}`);
-    items.push(...pageItems);
-    const link = response.headers.get('link') || '';
-    const nextMatch = link.match(/<([^>]+)>;\s*rel="next"/);
-    nextUrl = nextMatch ? new URL(nextMatch[1], nextUrl) : null;
-  }
-  return items;
-}
-
-async function refresh() {
-  const previous = JSON.parse(await readFile('src/data/publicStats.json', 'utf8'));
-  const appStore = JSON.parse(await readFile('src/data/appStoreMetadata.json', 'utf8'));
-  const refreshedAt = now();
-  const next = structuredClone(previous);
-  let statsUpdated=false;
-  try { const profile = await getJson(`https://api.github.com/users/${username}`); if (!Number.isInteger(profile.public_repos)) throw new Error('GitHub public_repos was not an integer'); next.github = { publicRepositories: profile.public_repos, lastSuccessAt: refreshedAt }; statsUpdated=true; } catch (error) { console.error(`GitHub refresh failed; retaining ${next.github.lastSuccessAt}: ${error.message}`); }
-  try { const [models, datasets] = await Promise.all([getHuggingFaceAll(`https://huggingface.co/api/models?author=${hfUser}`), getHuggingFaceAll(`https://huggingface.co/api/datasets?author=${hfUser}`)]); next.huggingFace = { publicModels: models.length, publicDatasets: datasets.length, lastSuccessAt: refreshedAt }; statsUpdated=true; } catch (error) { console.error(`Hugging Face refresh failed; retaining ${next.huggingFace.lastSuccessAt}: ${error.message}`); }
-  try { const repositories = await getAll(`https://hub.docker.com/v2/repositories/${dockerUser}/?page_size=100`, 'results'); next.dockerHub = { publicRepositories: repositories.length, lastSuccessAt: refreshedAt }; statsUpdated=true; } catch (error) { console.error(`Docker Hub refresh failed; retaining ${next.dockerHub.lastSuccessAt}: ${error.message}`); }
-  if(statsUpdated)next.updatedAt=refreshedAt;
-  for(const [slug,entry] of Object.entries(appStore)){try{const result=await getJson(`https://itunes.apple.com/lookup?id=${entry.appStoreId}&country=${entry.country}`);const version=result.results?.[0]?.version;if(typeof version!=='string'||!version)throw new Error('App Store version was not available');appStore[slug]={...entry,version,lastSuccessAt:refreshedAt};}catch(error){console.error(`App Store metadata refresh failed for ${slug}; retaining ${entry.lastSuccessAt}: ${error.message}`)}}
-  await writeFile('src/data/publicStats.json', `${JSON.stringify(next, null, 2)}\n`);
-  await writeFile('src/data/appStoreMetadata.json', `${JSON.stringify(appStore, null, 2)}\n`);
-  console.log(JSON.stringify({statistics:next,appStore}));
-}
-
-refresh().catch(error => { console.error(error); process.exitCode = 1; });
+if(import.meta.url===new URL(process.argv[1],`file://${process.cwd()}/`).href)refresh().catch(error=>{console.error(error);process.exitCode=1});
