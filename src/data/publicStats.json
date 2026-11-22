@@ -1,16 +1,16 @@
 {
-  "updatedAt": "2026-11-21T11:17:00.295Z",
+  "updatedAt": "2026-11-22T11:36:12.631Z",
   "github": {
     "publicRepositories": 59,
-    "lastSuccessAt": "2026-11-21T11:17:00.295Z"
+    "lastSuccessAt": "2026-11-22T11:36:12.631Z"
   },
   "huggingFace": {
-    "publicModels": 94,
+    "publicModels": 101,
     "publicDatasets": 10,
-    "lastSuccessAt": "2026-11-21T11:17:00.295Z"
+    "lastSuccessAt": "2026-11-22T11:36:12.631Z"
   },
   "dockerHub": {
     "publicRepositories": 20,
-    "lastSuccessAt": "2026-11-21T11:17:00.295Z"
+    "lastSuccessAt": "2026-11-22T11:36:12.631Z"
   }
 }
