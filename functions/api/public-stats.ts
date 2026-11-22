@@ -1,0 +1,7 @@
+import{fetchPublicStats,type PublicStats}from'../../src/lib/publicStats';
+const cacheKey='https://portfolio-cache.invalid/api/public-stats';
+const maxAgeMs=5*60*1000;
+const staleAgeMs=24*60*60*1000;
+type CachedStats={stats:PublicStats;cachedAt:string};
+const response=(body:PublicStats|{error:string},cacheStatus:'fresh'|'cached'|'stale',status=200)=>new Response(JSON.stringify({...body,cacheStatus}),{status,headers:{'Content-Type':'application/json; charset=utf-8','Cache-Control':'no-store'}});
+export const onRequestGet:PagesFunction=async()=>{const cache=await caches.open('public-stats-v2');const key=new Request(cacheKey);const cached=await cache.match(key);const record=cached?await cached.json() as CachedStats:undefined;const age=record?Date.now()-Date.parse(record.cachedAt):Infinity;if(record&&age<maxAgeMs)return response(record.stats,'cached');try{const stats=await fetchPublicStats();const record={stats,cachedAt:new Date().toISOString()};await cache.put(key,new Response(JSON.stringify(record),{headers:{'Content-Type':'application/json; charset=utf-8'}}));return response(stats,'fresh')}catch{if(record&&age<staleAgeMs)return response(record.stats,'stale');return response({error:'Public statistics are temporarily unavailable.'},'stale',503)}};

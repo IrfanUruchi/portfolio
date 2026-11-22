@@ -36,8 +36,14 @@ Edit project records in `src/data/projects.ts`. Site identity and contact links 
 - Output directory: **`dist`**
 - Production branch: **`main`**
 
-`public/_redirects` provides the SPA fallback for direct route navigation. Attach `irfanuruchi.in` as the custom domain in the Cloudflare Pages dashboard after the first deployment, then verify DNS and HTTPS activation.
+Cloudflare Pages provides the SPA fallback for direct route navigation when no top-level `404.html` is deployed. No catch-all `_redirects` rule is needed, which keeps `/api/public-stats` available to its Pages Function. Attach `irfanuruchi.in` as the custom domain in the Cloudflare Pages dashboard after the first deployment, then verify DNS and HTTPS activation.
 
-### Metadata refresh
+### Live public statistics
 
-`.github/workflows/refresh-public-stats.yml` runs daily at 03:17 UTC and can also be dispatched manually. It fetches the GitHub profile repository total, paginated Hugging Face model and dataset listings, paginated Docker Hub repositories, and the public App Store version. It commits only cached JSON snapshots; Cloudflare Pages serves those snapshots from the regular production deployment. No token is required for the current public endpoints. The workflow needs GitHub Actions to be enabled and the repository’s `GITHUB_TOKEN` to retain `contents: write` permission. A failed provider retains its prior successful value rather than writing zero.
+`functions/api/public-stats.ts` is a Cloudflare Pages Function served at `GET /api/public-stats`. It aggregates the public GitHub profile count, all paginated Hugging Face model and dataset repositories, and all paginated Docker Hub namespace repositories. The Function keeps a five-minute normalized provider cache and may serve it as `cacheStatus: "cached"`; a failed refresh can serve a record up to one day old as `cacheStatus: "stale"`. Client responses are `no-store`, so the browser does not obscure the API source. If no usable cache exists, it returns HTTP 503 rather than misleading zeros.
+
+Cloudflare Pages Functions must be enabled for this repository’s Pages project. No environment variables or secrets are required because all provider endpoints are public. The React homepage uses the deployed endpoint once when it mounts and uses the checked-in snapshot only as a visible cached fallback for local/static contexts. The Pages Function will be deployed by the normal Git-connected Pages deployment; it is not exercised by Vite's development server.
+
+### Legacy metadata refresh
+
+`.github/workflows/refresh-public-stats.yml` remains as a build-time fallback snapshot and App Store metadata refresh. Live production counts now come from the Pages Function, so a public repository change no longer requires a React rebuild to appear after the endpoint cache refreshes.

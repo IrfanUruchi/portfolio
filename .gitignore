@@ -8,6 +8,7 @@ dist
 Thumbs.db
 .idea
 .vscode
+.wrangler
 *.local
 *.log
 *.tsbuildinfo
