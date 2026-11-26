@@ -1,3 +1,59 @@
-import{Link}from'react-router-dom';import Seo from'../components/Seo';import ProjectCard from'../components/ProjectCard';import CapabilityGrid from'../components/CapabilityGrid';import PublicStats from'../components/PublicStats';import{iulinuxBook as book}from'../data/books';import{projects,type FeaturedGroup}from'../data/projects';import{researchOutputs}from'../data/research';import{siteConfig}from'../config';
-const groups:{title:FeaturedGroup;description:string}[]=[{title:'Flagship Engineering Systems',description:'Original systems work across operating systems, virtualization, and AI runtime infrastructure.'},{title:'AI Research and Models',description:'Reproducible model research, adaptation, evaluation, and deployment releases.'},{title:'Distributed and Infrastructure Systems',description:'Coordination and recovery across heterogeneous workers and edge nodes.'}];
-export default function Home(){return <><Seo title="Computer Engineer" description="Irfan Uruçi builds operating-system, machine-learning, distributed, and application systems."/><section className="hero shell"><div className="hero-copy"><p className="eyebrow">Irfan Uruçi · Computer Engineer</p><h1>Systems, models, and <em>engineering research.</em></h1><p className="lede">I develop operating-system tooling, machine-learning artifacts, distributed infrastructure, and applications for cloud, desktop, and edge hardware.</p><div className="actions"><Link className="button primary" to="/projects">View engineering work</Link><Link className="button secondary" to="/research">Research archive</Link></div></div><aside className="system-map" aria-label="Engineering areas">{['Operating systems','ML research','Model inference','Distributed systems','Applications'].map((x,i)=><div key={x}><span>{String(i+1).padStart(2,'0')}</span><b>{x}</b></div>)}</aside></section><section className="ios-home shell iulinux-preview"><div><p className="section-label">Linux Distribution / Operating Systems</p><h2>IULinux.</h2><p><strong>IULinux 0.1 Alpha 1</strong> · Ubuntu-based KDE distribution with custom system settings, a PackageKit-backed App Store, signed package updates, and optional workstation profiles.</p></div><img className="iulinux-preview-image" src="/assets/iulinux/desktop.png" alt="IULinux KDE Plasma desktop with the IULinux wallpaper and system panel"/><Link className="button secondary" to="/iulinux">Explore IULinux →</Link></section><PublicStats/><section className="book-feature shell"><img src="/assets/books/iulinux-v0.3.5-cover.png" alt={`Published cover of ${book.title}`}/><div><p className="section-label">New engineering book</p><h2>{book.title}</h2><p>{book.subtitle}</p><p>{book.author} · v{book.edition} · {book.pages} pages</p><Link className="text-link" to="/books/iulinux">Explore the book →</Link></div></section><section className="shell section"><div className="section-head"><div><p className="section-label">Engineering projects</p><h2>Documented systems.</h2><p>Public work organized by technical domain, implementation status, and available evidence.</p></div><Link className="text-link" to="/projects">All projects →</Link></div>{groups.map(group=><section className="project-group" key={group.title}><header className="project-group-head"><h3>{group.title}</h3><p>{group.description}</p></header><div className="project-grid">{projects.filter(project=>project.featuredGroup===group.title).map(project=><ProjectCard key={project.slug} project={project} index={projects.indexOf(project)}/>)}</div></section>)}</section><section className="section soft"><div className="shell"><div className="section-head"><div><p className="section-label">Research & publications</p><h2>Selected publications.</h2><p>Zenodo-deposited reports and preprints, with associated engineering work where available.</p></div><Link className="text-link" to="/research">All publications →</Link></div><div className="research-summary">{researchOutputs.slice(0,3).map(item=><article key={item.slug}><p className="section-label">{item.type} · {item.date.slice(0,4)}</p><h3>{item.title}</h3><p>{item.abstract}</p><Link className="text-link" to={`/research/${item.slug}`}>Read publication →</Link></article>)}</div></div></section><section className="section soft"><div className="shell"><p className="section-label">Technical areas</p><h2>Engineering scope.</h2><CapabilityGrid/></div></section><section className="background shell section"><div><p className="section-label">Education</p><h2>B.Sc. in Computer Engineering</h2></div><div><strong>South East European University</strong><p>240 ECTS · 2026</p><Link className="text-link" to="/about">About →</Link></div></section><section className="cta shell"><p className="section-label">Open-source development</p><h2>Repositories, releases, and documentation.</h2><a className="button primary" href={siteConfig.github}>GitHub ↗</a></section></>}
+import { Link } from 'react-router-dom';
+import Seo from '../components/Seo';
+import ProjectCard from '../components/ProjectCard';
+import PublicStats from '../components/PublicStats';
+import { iulinuxRelease as release } from '../data/iulinux';
+import { projects } from '../data/projects';
+import { researchOutputs } from '../data/research';
+
+const selectedProjects = [
+  projects.find(project => project.slug === 'multi-gpu-ai-orchestrator'),
+  projects.find(project => project.featuredGroup === 'AI Research and Models'),
+  projects.find(project => project.featuredGroup === 'Distributed and Infrastructure Systems'),
+].filter(project => project !== undefined);
+
+export default function Home() {
+  return <>
+    <Seo title="Computer Engineer" description="Irfan Uruçi builds operating-system, machine-learning, distributed, and application systems." />
+    <section className="hero shell">
+      <div>
+        <p className="eyebrow">Computer Engineer</p>
+        <h1>Irfan Uruçi</h1>
+        <p className="lede">I build operating-system tooling, model inference infrastructure, distributed systems, and applications. My machine learning research focuses on model adaptation, evaluation, and deployment.</p>
+        <div className="actions">
+          <Link className="button primary" to="/projects">Engineering projects</Link>
+          <Link className="button secondary" to="/research">Research & publications</Link>
+        </div>
+      </div>
+    </section>
+    <section className="shell">
+      <div className="showcase">
+        <div className="showcase-copy">
+          <p className="eyebrow">Operating systems · Public Beta</p>
+          <h2>{release.name}</h2>
+          <p>An independent Linux workstation distribution built on Ubuntu 26.04 LTS and KDE Plasma, with native system settings, signed software distribution, and configuration recovery.</p>
+          <Link className="button secondary" to="/iulinux">View the engineering project</Link>
+        </div>
+        <img src={release.screenshot} alt={release.screenshotAlt} width="2048" height="1276" fetchPriority="high" />
+      </div>
+    </section>
+    <PublicStats />
+    <section className="shell section">
+      <div className="section-head"><h2>Selected engineering projects</h2><Link className="text-link" to="/projects">All projects</Link></div>
+      <div className="project-grid home-projects">
+        {selectedProjects.map(project => <ProjectCard key={project.slug} project={project} />)}
+      </div>
+    </section>
+    <section className="section soft">
+      <div className="shell">
+        <div className="section-head"><h2>Selected research</h2><Link className="text-link" to="/research">All publications</Link></div>
+        <div className="research-summary">
+          {researchOutputs.slice(0, 3).map(item => <article key={item.slug}>
+            <p className="section-label">{item.type} · {item.date.slice(0, 4)}</p>
+            <h3><Link to={`/research/${item.slug}`}>{item.title}</Link></h3>
+          </article>)}
+        </div>
+      </div>
+    </section>
+  </>;
+}

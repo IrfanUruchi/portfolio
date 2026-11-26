@@ -8,7 +8,7 @@ describe('PublicStats', () => {
     vi.stubGlobal('fetch', fetcher);
     render(<PublicStats />);
     expect(screen.getByText('60')).toBeInTheDocument();
-    expect(screen.getByText(/Automatically updated/)).toBeInTheDocument();
+    expect(screen.queryByText(/Automatically updated/)).not.toBeInTheDocument();
     expect(fetcher).not.toHaveBeenCalled();
   });
 });
